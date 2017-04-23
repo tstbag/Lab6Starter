@@ -62,6 +62,8 @@ public class PokerTableController implements Initializable {
 
 	@FXML
 	private Button btnStartGame;
+
+	private ArrayList<ToggleButton> btnSitLeave = new ArrayList<ToggleButton>();
 	@FXML
 	private ToggleButton btnPos1SitLeave;
 	@FXML
@@ -82,10 +84,35 @@ public class PokerTableController implements Initializable {
 
 	@FXML
 	private HBox hboxCommunity;
+	
+	
+	public void DealFakeHand(ActionEvent event) {
+		
+		hboxP1Cards.getChildren().clear();
+
+		ImageView i1 = new ImageView(new Image(getClass().getResourceAsStream("/include/img/26.png"), 75, 75, true, true));
+		hboxP1Cards.getChildren().add(i1);
+
+		ImageView i2 = new ImageView(new Image(getClass().getResourceAsStream("/include/img/27.png"), 75, 75, true, true));
+		hboxP1Cards.getChildren().add(i2);
+
+		ImageView i3 = new ImageView(new Image(getClass().getResourceAsStream("/include/img/28.png"), 75, 75, true, true));
+		hboxP1Cards.getChildren().add(i3);
+
+		ImageView i4 = new ImageView(new Image(getClass().getResourceAsStream("/include/img/29.png"), 75, 75, true, true));
+		hboxP1Cards.getChildren().add(i4);
+
+		ImageView i5 = new ImageView(new Image(getClass().getResourceAsStream("/include/img/30.png"), 75, 75, true, true));
+		hboxP1Cards.getChildren().add(i5);
+		
+	
+	}
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-
+		btnSitLeave.clear();
+		btnSitLeave.add(btnPos1SitLeave);
+		btnSitLeave.add(btnPos2SitLeave);
 	}
 
 	public void setMainApp(MainApp mainApp) {
@@ -100,11 +127,24 @@ public class PokerTableController implements Initializable {
 	public void GetGameState() {
 	}
 
-	// TODO: Lab #4 - Complete (fix) setiPlayerPosition
 	public void btnSitLeave_Click(ActionEvent event) {
+		
+		
+		//	Steps:
+		//	btnSitLeave_Click is executed.  Sends a message to:
+		//	mainApp.messageSend(act)
+		//	messageSend will send that message to PokerHub
+		//	PokerHub receives the message and will either do the 'Sit' or 'Leave' action
+		//	PokerHub will send the message back to all clients
+		//	mainApp.messageReceived will receive the message from PokerHub
+		//	mainApp will call HandleTableState
+		//	HandleTableState will paint the screen
+		
+		
 
 		ToggleButton btn = (ToggleButton) event.getSource();
 		eAction eAct = null;
+		
 		if (btn.getText().equals("Sit")) {
 			eAct = eAction.Sit;
 		} else if (btn.getText().equals("Leave")) {
@@ -179,41 +219,36 @@ public class PokerTableController implements Initializable {
 
 	public void Handle_TableState(Table HubPokerTable) {
 
+		//	Set default state of the buttons/labels
+		getPlayerLabel(1).setText("");
+		getPlayerLabel(2).setText("");
+		getSitLeave(1).setVisible(true);
+		getSitLeave(2).setVisible(true);
+		getSitLeave(1).setText("Sit");
+		getSitLeave(2).setText("Sit");
+
 		Iterator it = HubPokerTable.getHmPlayer().entrySet().iterator();
-		lblPlayerPos1.setText("");
-		lblPlayerPos2.setText("");
-		btnPos1SitLeave.setText("Sit");
-		btnPos2SitLeave.setText("Sit");
-
-		if (HubPokerTable.getHmPlayer().size()> 0)
-		{
-			btnPos1SitLeave.setVisible(false);
-			btnPos2SitLeave.setVisible(false);
-		}
-
 		while (it.hasNext()) {
 			Map.Entry pair = (Map.Entry) it.next();
 			Player p = (Player) pair.getValue();
+			// Set the player label
+			getPlayerLabel(p.getiPlayerPosition()).setText(p.getPlayerName());
 
-			if (p.getiPlayerPosition() == 1) {
-				lblPlayerPos1.setText(p.getPlayerName());
-				btnPos1SitLeave.setText("Leave");
-
-			} else if (p.getiPlayerPosition() == 2) {
-				lblPlayerPos2.setText(p.getPlayerName());
-				btnPos2SitLeave.setText("Leave");
-			}
-
- 			ToggleButton btnSitLeave = getSitLeave(p.getiPlayerPosition());
-
+			// Am I the player
 			if (p.getiPokerClientID() == mainApp.getPlayer().getiPokerClientID()) {
-				btnSitLeave.setText("Leave");
-				btnSitLeave.setVisible(true);
+				getSitLeave(p.getiPlayerPosition()).setVisible(true);
+				getSitLeave(p.getiPlayerPosition()).setText("Leave");
 
-			} else {
-				btnSitLeave.setVisible(false);
-			} 
+				for (int a = 1; a < 3; a++) {
+					if (a != p.getiPlayerPosition())
+						getSitLeave(a).setVisible(false);
+				}
 
+			}
+			// I'm not the player, but someone is sitting in that spot
+			else {
+				getSitLeave(p.getiPlayerPosition()).setVisible(false);
+			}
 		}
 
 	}
@@ -270,12 +305,6 @@ public class PokerTableController implements Initializable {
 		case "btnPlayer2Fold":
 			// Fold for Player 2
 			break;
-		case "btnPlayer3Fold":
-			// Fold for Player 3
-			break;
-		case "btnPlayer4Fold":
-			// Fold for Player 4
-			break;
 
 		}
 	}
@@ -289,12 +318,6 @@ public class PokerTableController implements Initializable {
 			break;
 		case "btnPlayer2Check":
 			// Check for Player 2
-			break;
-		case "btnPlayer3Check":
-			// Check for Player 3
-			break;
-		case "btnPlayer4Check":
-			// Check for Player 4
 			break;
 		}
 	}

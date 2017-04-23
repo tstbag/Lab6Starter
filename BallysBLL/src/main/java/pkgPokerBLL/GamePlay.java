@@ -15,27 +15,27 @@ import pkgPokerEnum.eGameState;
 public class GamePlay implements Serializable {
 
 	private UUID GameID;
-	// private UUID PlayerID_NextToAct = null;
 	private HashMap<UUID, Player> hmGamePlayers = new HashMap<UUID, Player>();
-	// private ArrayList<GamePlayPlayerHand> GamePlayerHand = new
-	// ArrayList<GamePlayPlayerHand>();
-
 	private HashMap<UUID, Hand> hmPlayerHand = new HashMap<UUID, Hand>();
-
 	private Player PlayerCommon;
 	private Hand GameCommonHand;
 	private Rule rle;
 	private Deck GameDeck = null;
 	private UUID GameDealer = null;
-	private int[] iActOrder = null;
-	private Player PlayerNextToAct = null;
+	// private int[] iActOrder = null;
+	// private Player PlayerNextToAct = null;
+	private int iPlayerPositionNext = -1;
 	private eDrawCount eDrawCountLast;
 	private eGameState eGameState;
 
-	public GamePlay(Rule rle, UUID GameDealerID) {
+	public GamePlay(Rule rle, UUID GameDealerID, HashMap<UUID, Player> gamePlayers) {
+
 		this.setGameID(UUID.randomUUID());
 		this.setGameDealer(GameDealerID);
 		this.rle = rle;
+
+		// Add the players to the game
+		setGamePlayers(gamePlayers);
 
 		if (rle.GetCommunityCardsCount() > 0) {
 			this.PlayerCommon = new Player();
@@ -47,6 +47,14 @@ public class GamePlay implements Serializable {
 
 		// Set the draw count
 		this.seteDrawCountLast(eDrawCount.NONE);
+
+		// Set the Action Order based on the PlayerID from the Dealer
+		// this.setiActOrder(GetOrder(gamePlayers.get(GameDealerID).getiPlayerPosition()));
+
+		// Set the next player to act (dealer + next in the list
+		this.iPlayerPositionNext = (GamePlay.NextPosition(gamePlayers.get(GameDealerID).getiPlayerPosition(),
+				GamePlay.GetOrder(gamePlayers.get(GameDealerID).getiPlayerPosition())));
+
 	}
 
 	public Player getPlayerCommon() {
@@ -151,14 +159,6 @@ public class GamePlay implements Serializable {
 		GameDeck = gameDeck;
 	}
 
-	public void drawCard(Player p, eCardDestination eCardDestination)  {
-		if (eCardDestination == eCardDestination.Player) {
-			this.getPlayerHand(p).AddToCardsInHand(this.getGameDeck().Draw());
-		} else if (eCardDestination == eCardDestination.Community) {
-			this.getGameCommonHand().AddToCardsInHand(this.getGameDeck().Draw());
-		}
-	}
-
 	public UUID getGameDealer() {
 		return GameDealer;
 	}
@@ -167,21 +167,18 @@ public class GamePlay implements Serializable {
 		GameDealer = gameDealer;
 	}
 
-	public int[] getiActOrder() {
-		return iActOrder;
-	}
+	/*
+	 * public int[] getiActOrder() { return iActOrder; }
+	 * 
+	 * public void setiActOrder(int[] iActOrder) { this.iActOrder = iActOrder; }
+	 */
 
-	public void setiActOrder(int[] iActOrder) {
-		this.iActOrder = iActOrder;
-	}
-
-	public Player getPlayerNextToAct() {
-		return PlayerNextToAct;
-	}
-
-	public void setPlayerNextToAct(Player playerNextToAct) {
-		PlayerNextToAct = playerNextToAct;
-	}
+	/*
+	 * public Player getPlayerNextToAct() { return PlayerNextToAct; }
+	 * 
+	 * public void setPlayerNextToAct(Player playerNextToAct) { PlayerNextToAct
+	 * = playerNextToAct; }
+	 */
 
 	public eDrawCount geteDrawCountLast() {
 		return eDrawCountLast;
@@ -231,8 +228,17 @@ public class GamePlay implements Serializable {
 	}
 
 	public Player getPlayerByPosition(int iPlayerPosition) {
-		Player pl = null;
-		return pl;
+
+		Iterator it = getGamePlayers().entrySet().iterator();
+		while (it.hasNext()) {
+			Map.Entry pair = (Map.Entry) it.next();
+			Player p = (Player) pair.getValue();
+
+			if (p.getiPlayerPosition() == iPlayerPosition) {
+				return p;
+			}
+		}
+		return null;
 	}
 
 	public Hand GetWinningHand() {
@@ -247,6 +253,45 @@ public class GamePlay implements Serializable {
 
 	public void ScoreGame() {
 
+	}
+
+	public void ExecuteDrawRound() {
+		// enumerate DrawCount
+		eDrawCountLast = eDrawCount.geteDrawCount(eDrawCountLast.getDrawNo() + 1);
+
+		// Get the CardDraw based on the game's rule for that DrawCount
+		CardDraw cd = this.rle.GetDrawCard(eDrawCountLast);
+
+		// Get The Draw Order based on the PlayerNextToAct
+		int[] iDrawOrder = GamePlay.GetOrder(this.iPlayerPositionNext);
+
+		for (int iDrawCnt = 0; iDrawCnt < cd.getCardCount().getCardCount(); iDrawCnt++) {
+
+			if (cd.getCardDestination() == eCardDestination.Player) {
+				for (int iDrawPlayer : iDrawOrder) {
+					// Get the player to draw
+					Player pDraw = getPlayerByPosition(iDrawPlayer);
+
+					// Draw a card from the deck and put it in the player's hand
+					
+					if (pDraw != null)
+						drawCard(pDraw, cd.getCardDestination());
+				}
+			} else if (cd.getCardDestination() == eCardDestination.Community) {
+				drawCard(PlayerCommon, cd.getCardDestination());
+			}
+		}
+	}
+
+	public void drawCard(Player p, eCardDestination eCardDestination) {
+
+		if (eCardDestination == eCardDestination.Player) {
+			if (this.getPlayerHand(p).isFolded() == false) {
+				this.getPlayerHand(p).AddToCardsInHand(this.getGameDeck().Draw());
+			}
+		} else if (eCardDestination == eCardDestination.Community) {
+			this.getGameCommonHand().AddToCardsInHand(this.getGameDeck().Draw());
+		}
 	}
 
 }

@@ -21,6 +21,7 @@ public class Hand {
 	private boolean bIsScored;
 	private HandScore HS;
 	private ArrayList<Card> CardsInHand = new ArrayList<Card>();
+	private boolean isFolded;
 
 	public Hand() {
 
@@ -30,6 +31,7 @@ public class Hand {
 		
 		this.HandId = (HandID == null) ? UUID.randomUUID() : HandID;		
 		this.HandPlayer = handPlayer;
+		this.isFolded = false;
 	}	
 
 	public void AddCardToHand(Card c) {
@@ -46,6 +48,14 @@ public class Hand {
 
 	public void AddToCardsInHand(Card c) {
 		CardsInHand.add(c);
+	}
+
+	public boolean isFolded() {
+		return isFolded;
+	}
+
+	public void setFolded(boolean isFolded) {
+		this.isFolded = isFolded;
 	}
 
 	public Hand EvaluateHand() {

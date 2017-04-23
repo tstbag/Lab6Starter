@@ -38,14 +38,7 @@
                         <Insets />
                      </opaqueInsets>
                   </HBox>
-                  <HBox fx:id="hboxP1Cards" alignment="BOTTOM_LEFT" prefHeight="102.0" prefWidth="325.0" GridPane.columnIndex="1">
-                     <children>
-                        <ImageView fitHeight="60.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true">
-                           <image>
-                              <Image url="@../../../../resources/img/10.png" />
-                           </image>
-                        </ImageView>
-                     </children></HBox>
+                  <HBox fx:id="hboxP1Cards" alignment="BOTTOM_LEFT" prefHeight="102.0" prefWidth="325.0" GridPane.columnIndex="1" />
                   <HBox id="txtPlayer1Name" prefHeight="100.0" prefWidth="200.0" GridPane.rowIndex="1" />
                   <HBox prefHeight="100.0" prefWidth="200.0" GridPane.rowIndex="2">
                      <children>
@@ -89,7 +82,7 @@
                   <HBox prefHeight="100.0" prefWidth="200.0" spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
                      <children>
                         <Button id="btnStartGame" fx:id="btnStartGame" mnemonicParsing="false" onAction="#btnStart_Click" prefWidth="100.0" text="Start" />
-                        <Button id="btnDeal" mnemonicParsing="false" onAction="#btnDeal_Click" prefWidth="100.0" text="Deal" />
+                        <Button id="btnDeal" mnemonicParsing="false" onAction="#DealFakeHand" prefWidth="100.0" text="Deal" />
                      </children>
                   </HBox>
                   <HBox fx:id="hboxCommunity" prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
